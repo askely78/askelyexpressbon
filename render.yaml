@@ -1,19 +1,10 @@
 services:
   - type: web
-    name: askely-whatsapp
+    name: askely-express
     env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
     plan: free
     region: frankfurt
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: TWILIO_ACCOUNT_SID
-        sync: false
-      - key: TWILIO_AUTH_TOKEN
-        sync: false
-      - key: TWILIO_WHATSAPP_FROM
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
+    branch: main
+    autoDeploy: true
