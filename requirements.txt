@@ -1,5 +1,5 @@
 Flask==2.3.3
-gunicorn==23.0.0
-psycopg2-binary
-twilio==8.10.1
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
+twilio==8.11.0
 openai==1.30.1
