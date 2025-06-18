@@ -1,60 +1,72 @@
 
-import os
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect
 import psycopg2
-import openai
-from twilio.twiml.messaging_response import MessagingResponse
+import os
+from twilio.rest import Client
 
 app = Flask(__name__)
 
-# Configuration OpenAI
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+# Connexion à la base PostgreSQL
+conn = psycopg2.connect(os.environ["DATABASE_URL"])
+cursor = conn.cursor()
 
-# Connexion à la base de données PostgreSQL
-DATABASE_URL = os.environ.get("DATABASE_URL")
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-cur = conn.cursor()
+# Clés Twilio
+TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
+TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+TWILIO_WHATSAPP_FROM = os.environ["TWILIO_WHATSAPP_FROM"]
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route("/colis")
-def liste_colis():
-    cur.execute("SELECT id, expediteur, destinataire, date_envoi FROM colis ORDER BY date_envoi DESC")
-    colis = cur.fetchall()
-    return render_template("liste_colis.html", colis=colis)
+@app.route("/colis", methods=["GET", "POST"])
+def colis():
+    if request.method == "POST":
+        expediteur = request.form["expediteur"]
+        destinataire = request.form["destinataire"]
+        ville_depart = request.form["ville_depart"]
+        ville_arrivee = request.form["ville_arrivee"]
+        date = request.form["date"]
+        transporteur_id = request.form["transporteur_id"]
+
+        cursor.execute(
+            "INSERT INTO colis (expediteur, destinataire, ville_depart, ville_arrivee, date, transporteur_id) VALUES (%s, %s, %s, %s, %s, %s)",
+            (expediteur, destinataire, ville_depart, ville_arrivee, date, transporteur_id),
+        )
+        conn.commit()
+
+        # Récupération du numéro WhatsApp du transporteur
+        cursor.execute("SELECT nom, telephone FROM transporteurs WHERE id = %s", (transporteur_id,))
+        result = cursor.fetchone()
+        if result:
+            nom_transporteur, telephone = result
+            message = f"""
+📦 Nouvelle demande d’envoi de colis !
+✅ Expéditeur : {expediteur}
+✅ Destinataire : {destinataire}
+🛫 De : {ville_depart}
+🛬 À : {ville_arrivee}
+📅 Date : {date}
+👉 Contacte l’expéditeur pour convenir de la remise.
+"""
+            client.messages.create(
+                body=message,
+                from_=f"whatsapp:{TWILIO_WHATSAPP_FROM}",
+                to=f"whatsapp:{telephone}"
+            )
+
+        return redirect("/colis")
+
+    cursor.execute("SELECT id, nom FROM transporteurs")
+    transporteurs = cursor.fetchall()
+    return render_template("liste_colis.html", transporteurs=transporteurs)
 
 @app.route("/transporteurs")
-def liste_transporteurs():
-    cur.execute("SELECT id, nom, ville, telephone FROM transporteurs ORDER BY nom ASC")
-    transporteurs = cur.fetchall()
-    return render_template("liste_transporteurs.html", transporteurs=transporteurs)
-
-@app.route("/webhook/whatsapp", methods=["POST"])
-def whatsapp_webhook():
-    incoming_msg = request.values.get("Body", "").strip()
-    resp = MessagingResponse()
-    msg = resp.message()
-
-    if incoming_msg:
-        try:
-            completion = openai.ChatCompletion.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "Tu es Askely Express, un assistant de livraison et de transport."},
-                    {"role": "user", "content": incoming_msg},
-                ],
-                max_tokens=500
-            )
-            reply = completion.choices[0].message["content"].strip()
-        except Exception as e:
-            reply = f"Erreur IA : {str(e)}"
-    else:
-        reply = "Bienvenue sur Askely Express ! Posez-moi une question sur vos colis ou transporteurs."
-
-    msg.body(reply)
-    return str(resp)
+def transporteurs():
+    cursor.execute("SELECT * FROM transporteurs")
+    rows = cursor.fetchall()
+    return render_template("liste_transporteurs.html", transporteurs=rows)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
