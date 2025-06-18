@@ -1,72 +1,68 @@
-
-from flask import Flask, request, render_template, redirect
-import psycopg2
 import os
-from twilio.rest import Client
+from flask import Flask, request, render_template, jsonify
+from twilio.twiml.messaging_response import MessagingResponse
+import psycopg2
+import openai
 
 app = Flask(__name__)
 
-# Connexion à la base PostgreSQL
-conn = psycopg2.connect(os.environ["DATABASE_URL"])
-cursor = conn.cursor()
+# Configuration OpenAI
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Clés Twilio
-TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
-TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
-TWILIO_WHATSAPP_FROM = os.environ["TWILIO_WHATSAPP_FROM"]
-client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+# Configuration Twilio
+TWILIO_WHATSAPP_FROM = os.getenv("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886")
 
+# Connexion PostgreSQL
+DATABASE_URL = os.getenv("DATABASE_URL")
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+cur = conn.cursor()
+
+# PAGE WEB : Accueil
 @app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route("/colis", methods=["GET", "POST"])
-def colis():
-    if request.method == "POST":
-        expediteur = request.form["expediteur"]
-        destinataire = request.form["destinataire"]
-        ville_depart = request.form["ville_depart"]
-        ville_arrivee = request.form["ville_arrivee"]
-        date = request.form["date"]
-        transporteur_id = request.form["transporteur_id"]
+# PAGE WEB : Liste des colis
+@app.route("/colis")
+def liste_colis():
+    cur.execute("SELECT nom_expediteur, ville_depart, ville_arrivee, date_envoi FROM colis ORDER BY date_envoi DESC")
+    colis = cur.fetchall()
+    return render_template("liste_colis.html", colis=colis)
 
-        cursor.execute(
-            "INSERT INTO colis (expediteur, destinataire, ville_depart, ville_arrivee, date, transporteur_id) VALUES (%s, %s, %s, %s, %s, %s)",
-            (expediteur, destinataire, ville_depart, ville_arrivee, date, transporteur_id),
-        )
-        conn.commit()
-
-        # Récupération du numéro WhatsApp du transporteur
-        cursor.execute("SELECT nom, telephone FROM transporteurs WHERE id = %s", (transporteur_id,))
-        result = cursor.fetchone()
-        if result:
-            nom_transporteur, telephone = result
-            message = f"""
-📦 Nouvelle demande d’envoi de colis !
-✅ Expéditeur : {expediteur}
-✅ Destinataire : {destinataire}
-🛫 De : {ville_depart}
-🛬 À : {ville_arrivee}
-📅 Date : {date}
-👉 Contacte l’expéditeur pour convenir de la remise.
-"""
-            client.messages.create(
-                body=message,
-                from_=f"whatsapp:{TWILIO_WHATSAPP_FROM}",
-                to=f"whatsapp:{telephone}"
-            )
-
-        return redirect("/colis")
-
-    cursor.execute("SELECT id, nom FROM transporteurs")
-    transporteurs = cursor.fetchall()
-    return render_template("liste_colis.html", transporteurs=transporteurs)
-
+# PAGE WEB : Liste des transporteurs
 @app.route("/transporteurs")
-def transporteurs():
-    cursor.execute("SELECT * FROM transporteurs")
-    rows = cursor.fetchall()
-    return render_template("liste_transporteurs.html", transporteurs=rows)
+def liste_transporteurs():
+    cur.execute("SELECT nom, numero_whatsapp, villes FROM transporteurs")
+    transporteurs = cur.fetchall()
+    return render_template("liste_transporteurs.html", transporteurs=transporteurs)
 
-if __name__ == "__main__":
-    app.run()
+# WHATSAPP WEBHOOK
+@app.route("/webhook/whatsapp", methods=["POST"])
+def whatsapp_webhook():
+    incoming_msg = request.values.get("Body", "").strip()
+    sender = request.values.get("From", "")
+
+    resp = MessagingResponse()
+    msg = resp.message()
+
+    try:
+        if "envoyer" in incoming_msg.lower():
+            msg.body("📦 Pour envoyer un colis, merci d’indiquer :\nNom, Ville de départ, Ville d’arrivée, Date souhaitée.")
+        elif "transporteurs" in incoming_msg.lower():
+            cur.execute("SELECT nom, numero_whatsapp FROM transporteurs")
+            data = cur.fetchall()
+            liste = "\n".join([f"{t[0]} : {t[1]}" for t in data])
+            msg.body(f"🚚 Transporteurs disponibles :\n{liste}")
+        else:
+            # GPT-4o pour réponses libres
+            completion = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": incoming_msg}]
+            )
+            answer = completion.choices[0].message.content.strip()
+            msg.body(f"🤖 {answer}")
+    except Exception as e:
+        msg.body("❌ Une erreur est survenue avec l'intelligence artificielle. Réessayez plus tard.")
+        print("Erreur IA :", e)
+
+    return str(resp)
