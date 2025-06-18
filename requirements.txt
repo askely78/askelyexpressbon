@@ -1,5 +1,5 @@
 flask
 gunicorn
-psycopg2-binary
-twilio
 openai==0.28
+twilio
+psycopg2-binary
