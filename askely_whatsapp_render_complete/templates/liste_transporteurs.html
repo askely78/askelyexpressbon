@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Transporteurs</title></head>
+<body>
+<h2>Liste des Transporteurs</h2>
+<ul>
+{% for nom, tel in transporteurs %}
+  <li>{{ nom }} - 📞 <a href="https://wa.me/{{ tel }}" target="_blank">{{ tel }}</a></li>
+{% endfor %}
+</ul>
+<a href="/">Retour à l'accueil</a>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Colis</title></head>
+<body>
+<h2>Suivi des Colis</h2>
+<ul>
+{% for expediteur, destinataire, statut in colis %}
+  <li>📦 De {{ expediteur }} à {{ destinataire }} – Statut : {{ statut }}</li>
+{% endfor %}
+</ul>
+<a href="/">Retour à l'accueil</a>
+</body>
+</html>
