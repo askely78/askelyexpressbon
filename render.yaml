@@ -1,13 +1,11 @@
 services:
   - type: web
-    name: askely-express
+    name: askelyexpressbon
     env: python
-    plan: free
-    region: frankfurt
-    buildCommand: pip install -r requirements.txt
+    buildCommand: ""
     startCommand: gunicorn app:app
     envVars:
-      - key: DATABASE_URL
+      - key: OPENAI_API_KEY
         sync: false
       - key: TWILIO_ACCOUNT_SID
         sync: false
@@ -15,5 +13,5 @@ services:
         sync: false
       - key: TWILIO_WHATSAPP_FROM
         sync: false
-      - key: OPENAI_API_KEY
+      - key: DATABASE_URL
         sync: false
