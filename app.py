@@ -1,3 +1,4 @@
+
 import os
 import openai
 import psycopg2
@@ -9,67 +10,52 @@ app = Flask(__name__)
 # Configuration OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Configuration PostgreSQL
-DATABASE_URL = os.getenv("DATABASE_URL")
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-cursor = conn.cursor()
+# Connexion PostgreSQL
+conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+cur = conn.cursor()
 
-# Créer les tables si elles n'existent pas
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS colis (
-        id SERIAL PRIMARY KEY,
-        expediteur TEXT,
-        destinataire TEXT,
-        date_envoi DATE
-    );
-''')
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS transporteurs (
-        id SERIAL PRIMARY KEY,
-        nom TEXT,
-        ville TEXT,
-        whatsapp TEXT
-    );
-''')
-conn.commit()
-
-@app.route('/')
+# Page d'accueil
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
-@app.route('/colis')
-def liste_colis():
-    cursor.execute("SELECT * FROM colis ORDER BY date_envoi DESC LIMIT 10;")
-    colis = cursor.fetchall()
-    return render_template('liste_colis.html', colis=colis)
-
-@app.route('/transporteurs')
+# Liste des transporteurs
+@app.route("/transporteurs")
 def liste_transporteurs():
-    cursor.execute("SELECT * FROM transporteurs ORDER BY ville ASC;")
-    transporteurs = cursor.fetchall()
-    return render_template('liste_transporteurs.html', transporteurs=transporteurs)
+    cur.execute("SELECT nom, ville, telephone FROM transporteurs")
+    transporteurs = cur.fetchall()
+    return render_template("liste_transporteurs.html", transporteurs=transporteurs)
 
-@app.route('/webhook/whatsapp', methods=['POST'])
-def webhook_whatsapp():
-    incoming_msg = request.values.get('Body', '').strip()
-    user_number = request.values.get('From', '')
+# Liste des colis
+@app.route("/colis")
+def liste_colis():
+    cur.execute("SELECT expediteur, destinataire, date_envoi FROM colis")
+    colis = cur.fetchall()
+    return render_template("liste_colis.html", colis=colis)
 
-    # Appel OpenAI
-    try:
-        response_ai = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "Tu es un assistant pour un service de livraison de colis appelé Askely Express."},
-                {"role": "user", "content": incoming_msg}
-            ]
-        )
-        reply = response_ai.choices[0].message['content'].strip()
-    except Exception as e:
-        reply = "❌ Désolé, une erreur est survenue avec l'IA."
+# Webhook WhatsApp
+@app.route("/webhook/whatsapp", methods=["POST"])
+def whatsapp_webhook():
+    incoming_msg = request.values.get("Body", "").strip()
+    resp = MessagingResponse()
+    msg = resp.message()
 
-    twilio_response = MessagingResponse()
-    twilio_response.message(reply)
-    return str(twilio_response)
+    if "colis" in incoming_msg.lower():
+        msg.body("📦 Pour consulter vos colis, cliquez ici : https://askelyexpressbon.onrender.com/colis")
+    elif "transporteur" in incoming_msg.lower():
+        msg.body("🚚 Pour consulter les transporteurs, cliquez ici : https://askelyexpressbon.onrender.com/transporteurs")
+    else:
+        try:
+            completion = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": incoming_msg}]
+            )
+            response_text = completion.choices[0].message["content"]
+            msg.body(response_text)
+        except Exception as e:
+            msg.body("❌ Une erreur est survenue avec l'intelligence artificielle. Veuillez réessayer plus tard.")
 
-if __name__ == '__main__':
+    return str(resp)
+
+if __name__ == "__main__":
     app.run(debug=True)
