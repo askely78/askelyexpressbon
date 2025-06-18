@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: askelyexpressbon
+    name: askely-express
     env: python
     buildCommand: ""
     startCommand: gunicorn app:app
