@@ -1,91 +1,97 @@
-from flask import Flask, request, jsonify
+
 import os
+from flask import Flask, request
+from twilio.twiml.messaging_response import MessagingResponse
 import openai
 import psycopg2
-from datetime import datetime
-from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
 
-# Connexion base de données
-DATABASE_URL = os.environ.get("DATABASE_URL")
-conn = psycopg2.connect(DATABASE_URL, sslmode="require")
-cur = conn.cursor()
+# Variables d'environnement
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+TWILIO_WHATSAPP_FROM = os.getenv("TWILIO_WHATSAPP_FROM")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Clé OpenAI
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+# Configuration OpenAI
+openai.api_key = OPENAI_API_KEY
 
-# Menu automatique
-@app.route("/", methods=["GET"])
-def home():
-    return "Askely Express est en ligne."
+# Fonction pour se connecter à la base de données
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
+
+# Fonction pour insérer un transporteur
+def enregistrer_transporteur(nom, ville, telephone):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO transporteurs (nom, ville, telephone) VALUES (%s, %s, %s)", (nom, ville, telephone))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# Fonction pour insérer un colis
+def enregistrer_colis(nom, telephone, ville_depart, ville_arrivee, description, date_souhaitee):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO colis (nom, telephone, ville_depart, ville_arrivee, description, date_souhaitee) VALUES (%s, %s, %s, %s, %s, %s)",
+        (nom, telephone, ville_depart, ville_arrivee, description, date_souhaitee)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
 
 @app.route("/webhook/whatsapp", methods=["POST"])
-def whatsapp_webhook():
+def whatsapp_reply():
     incoming_msg = request.values.get("Body", "").strip().lower()
-    sender = request.values.get("From", "")
-    response = MessagingResponse()
-    msg = response.message()
+    resp = MessagingResponse()
+    msg = resp.message()
 
-    if incoming_msg in ["bonjour", "salut", "hello", "menu"]:
-        msg.body("""
-👋 Bienvenue chez *Askely Express* !
-
-Voici ce que je peux faire pour vous :
-
-1️⃣ Envoyer un colis  
-2️⃣ Inscrire un transporteur  
-3️⃣ Aide intelligente (IA)
-
-Répondez par le numéro correspondant pour commencer.
-""")
+    if incoming_msg in ["bonjour", "menu", "start", "hi"]:
+        msg.body("👋 Bienvenue chez *Askely Express* !\n\nQue souhaitez-vous faire ?\n"
+                 "1️⃣ Envoyer un colis\n"
+                 "2️⃣ Devenir transporteur\n"
+                 "3️⃣ Autre demande")
     elif incoming_msg == "1":
-        msg.body("📦 Très bien. Pour envoyer un colis, merci d’envoyer les informations suivantes :
-
-Nom complet, Ville de départ, Ville d’arrivée, Poids approximatif (kg), Date d’envoi souhaitée.")
-    elif incoming_msg.startswith("📦") or "," in incoming_msg:
-        try:
-            parts = incoming_msg.split(",")
-            if len(parts) >= 5:
-                nom, depart, arrivee, poids, date_envoi = [p.strip() for p in parts[:5]]
-                cur.execute("INSERT INTO colis (nom, ville_depart, ville_arrivee, poids, date_envoi, created_at) VALUES (%s, %s, %s, %s, %s, %s)", 
-                            (nom, depart, arrivee, poids, date_envoi, datetime.utcnow()))
-                conn.commit()
-                msg.body("✅ Votre demande d’envoi a été enregistrée avec succès ! Un transporteur vous contactera bientôt.")
-            else:
-                msg.body("❌ Format invalide. Veuillez envoyer : Nom, Ville départ, Ville arrivée, Poids, Date.")
-        except Exception as e:
-            msg.body("❌ Erreur lors de l’enregistrement. Merci de réessayer.")
+        msg.body("Très bien. Pour envoyer un colis, merci d’envoyer les informations suivantes :\n"
+                 "- Nom complet\n"
+                 "- Téléphone\n"
+                 "- Ville de départ\n"
+                 "- Ville d’arrivée\n"
+                 "- Description du colis\n"
+                 "- Date souhaitée")
     elif incoming_msg == "2":
-        msg.body("🚚 Pour inscrire un transporteur, merci d’envoyer :
-
-Nom complet, Téléphone, Ville, Jours de disponibilité.")
-    elif incoming_msg.startswith("🚚") or "," in incoming_msg:
-        try:
-            parts = incoming_msg.split(",")
-            if len(parts) >= 4:
-                nom, tel, ville, jours = [p.strip() for p in parts[:4]]
-                cur.execute("INSERT INTO transporteurs (nom, telephone, ville, jours_dispo, created_at) VALUES (%s, %s, %s, %s, %s)", 
-                            (nom, tel, ville, jours, datetime.utcnow()))
-                conn.commit()
-                msg.body("✅ Inscription enregistrée. Bienvenue parmi les transporteurs Askely Express !")
-            else:
-                msg.body("❌ Format invalide. Veuillez envoyer : Nom, Téléphone, Ville, Jours.")
-        except Exception as e:
-            msg.body("❌ Une erreur s’est produite. Merci de réessayer.")
-    elif incoming_msg == "3":
-        msg.body("✍️ Posez votre question, je vais vous répondre avec l’IA.")
+        msg.body("Pour vous inscrire comme transporteur, merci d’envoyer les informations suivantes :\n"
+                 "- Nom complet\n"
+                 "- Ville de départ\n"
+                 "- Numéro WhatsApp")
+    elif "-" in incoming_msg:
+        lignes = incoming_msg.split("\n")
+        if len(lignes) == 6:
+            enregistrer_colis(*lignes)
+            msg.body("✅ Votre demande d’envoi de colis a été enregistrée avec succès.")
+        elif len(lignes) == 3:
+            enregistrer_transporteur(*lignes)
+            msg.body("✅ Merci ! Vous êtes maintenant inscrit comme transporteur.")
+        else:
+            msg.body("❌ Format non reconnu. Merci de suivre le format donné.")
     else:
         try:
             completion = openai.ChatCompletion.create(
                 model="gpt-4o",
-                messages=[{"role": "user", "content": incoming_msg}]
+                messages=[
+                    {"role": "system", "content": "Tu es un assistant pour un service de transport de colis nommé Askely Express."},
+                    {"role": "user", "content": incoming_msg}
+                ]
             )
             msg.body(completion.choices[0].message.content)
         except Exception as e:
-            msg.body("🤖 Erreur avec l’intelligence artificielle. Veuillez reformuler ou réessayer plus tard.")
+            msg.body("❌ Une erreur est survenue avec l’intelligence artificielle. Réessaie plus tard.")
 
-    return str(response)
+    return str(resp)
+
+@app.route("/")
+def home():
+    return "Askely Express en ligne."
 
 if __name__ == "__main__":
     app.run(debug=True)
