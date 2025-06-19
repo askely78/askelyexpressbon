@@ -1,20 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Inscription Transporteur - Askely Express</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Devenir transporteur</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Formulaire d'inscription transporteur</h2>
-    <form action="/submit_transporteur" method="post">
-        <label>Nom complet:</label><br>
-        <input type="text" name="nom" required><br>
-        <label>Numéro WhatsApp:</label><br>
-        <input type="text" name="telephone" required><br>
-        <label>Villes desservies:</label><br>
-        <input type="text" name="villes_desservies" required><br>
-        <label>Jours disponibles:</label><br>
-        <input type="text" name="jours_disponibles" required><br>
-        <input type="submit" value="S'inscrire">
+  <div class="container">
+    <h2>Formulaire de transporteur</h2>
+    <form method="POST" action="/submit_transporteur">
+      
+<label for="nom">Nom</label>
+<input type="text" id="nom" name="nom" required>
+
+<label for="telephone">Téléphone</label>
+<input type="text" id="telephone" name="telephone" required>
+
+<label for="ville_depart">Ville de départ</label>
+<input type="text" id="ville_depart" name="ville_depart" required>
+
+<label for="ville_arrivee">Ville d'arrivée</label>
+<input type="text" id="ville_arrivee" name="ville_arrivee" required>
+
+<label for="date_disponible">Date disponible</label>
+<input type="date" id="date_disponible" name="date_disponible" required>
+
+      <button type="submit">Envoyer</button>
     </form>
+  </div>
 </body>
 </html>

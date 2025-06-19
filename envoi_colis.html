@@ -1,24 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Envoyer un colis - Askely Express</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Envoyer un colis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <div class="container">
     <h2>Formulaire d'envoi de colis</h2>
-    <form action="/submit_colis" method="post">
-        <label>Nom complet:</label><br>
-        <input type="text" name="nom" required><br>
-        <label>Numéro WhatsApp:</label><br>
-        <input type="text" name="telephone" required><br>
-        <label>Ville de départ:</label><br>
-        <input type="text" name="ville_depart" required><br>
-        <label>Ville d'arrivée:</label><br>
-        <input type="text" name="ville_arrivee" required><br>
-        <label>Date souhaitée:</label><br>
-        <input type="date" name="date" required><br>
-        <label>Description du colis:</label><br>
-        <textarea name="description" rows="4" cols="40" required></textarea><br>
-        <input type="submit" value="Envoyer">
+    <form method="POST" action="/submit_colis">
+      
+<label for="nom">Nom</label>
+<input type="text" id="nom" name="nom" required>
+
+<label for="telephone">Téléphone</label>
+<input type="text" id="telephone" name="telephone" required>
+
+<label for="ville_depart">Ville de départ</label>
+<input type="text" id="ville_depart" name="ville_depart" required>
+
+<label for="ville_arrivee">Ville d'arrivée</label>
+<input type="text" id="ville_arrivee" name="ville_arrivee" required>
+
+<label for="date_envoi">Date souhaitée</label>
+<input type="date" id="date_envoi" name="date_envoi" required>
+
+<label for="description">Description du colis</label>
+<textarea id="description" name="description"></textarea>
+
+      <button type="submit">Envoyer</button>
     </form>
+  </div>
 </body>
 </html>
