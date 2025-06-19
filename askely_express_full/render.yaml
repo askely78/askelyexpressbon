@@ -1,10 +1,6 @@
+
 services:
   - type: web
     name: askelyexpressbon
     env: python
-    plan: free
-    buildCommand: ""
     startCommand: gunicorn app:app
-    envVars:
-      - key: DATABASE_URL
-        sync: false

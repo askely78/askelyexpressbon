@@ -1,28 +1,60 @@
-
-from flask import Flask, request
-from twilio.twiml.messaging_response import MessagingResponse
+from flask import Flask, request, render_template, redirect
+import psycopg2
 import os
 
 app = Flask(__name__)
 
-@app.route("/webhook/whatsapp", methods=["POST"])
-def whatsapp_webhook():
-    incoming_msg = request.values.get("Body", "").lower()
-    resp = MessagingResponse()
-    msg = resp.message()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-    if "bonjour" in incoming_msg or "menu" in incoming_msg:
-        msg.body("👋 *Bienvenue chez Askely Express !*\nEnvoyez un message parmi les choix suivants :\n\n📦 Envoyer un colis\n📝 Inscription transporteur\n🔎 Suivi de colis\nℹ️ Aide")
-    elif "envoyer un colis" in incoming_msg:
-        msg.body("📦 Très bien. Pour envoyer un colis, merci d’envoyer les informations suivantes (chacune sur une ligne) :\n\n1. Nom complet\n2. Téléphone\n3. Ville de départ\n4. Ville d’arrivée\n5. Date souhaitée")
-    elif "inscription transporteur" in incoming_msg:
-        msg.body("📝 Bienvenue transporteur ! Veuillez envoyer les informations suivantes (chacune sur une ligne) :\n\n1. Nom complet\n2. Téléphone\n3. Villes desservies\n4. Dates disponibles")
-    elif "suivi de colis" in incoming_msg:
-        msg.body("🔎 Merci de renseigner votre numéro de suivi pour localiser votre colis.")
-    else:
-        msg.body("❓ Je n'ai pas compris votre demande. Veuillez répondre avec :\n- Envoyer un colis\n- Inscription transporteur\n- Suivi de colis\n- Menu")
+@app.route("/")
+def index():
+    return "👋 Bienvenue chez Askely Express ! Utilisez WhatsApp pour interagir."
 
-    return str(resp)
+# Formulaire envoi colis (HTML)
+@app.route("/formulaire_colis")
+def formulaire_colis():
+    return render_template("envoi_colis.html")
+
+@app.route("/submit_colis", methods=["POST"])
+def submit_colis():
+    nom = request.form["nom"]
+    telephone = request.form["telephone"]
+    ville_depart = request.form["ville_depart"]
+    ville_arrivee = request.form["ville_arrivee"]
+    date = request.form["date"]
+    poids = request.form["poids"]
+
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("INSERT INTO colis (nom, telephone, ville_depart, ville_arrivee, date, poids) VALUES (%s, %s, %s, %s, %s, %s)", 
+                (nom, telephone, ville_depart, ville_arrivee, date, poids))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return "✅ Colis enregistré avec succès !"
+
+# Formulaire inscription transporteur (HTML)
+@app.route("/formulaire_transporteur")
+def formulaire_transporteur():
+    return render_template("inscription_transporteur.html")
+
+@app.route("/submit_transporteur", methods=["POST"])
+def submit_transporteur():
+    nom = request.form["nom"]
+    telephone = request.form["telephone"]
+    ville = request.form["ville"]
+    jours_dispo = request.form["jours_dispo"]
+
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("INSERT INTO transporteurs (nom, telephone, ville, jours_dispo) VALUES (%s, %s, %s, %s)", 
+                (nom, telephone, ville, jours_dispo))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return "✅ Transporteur enregistré avec succès !"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000)

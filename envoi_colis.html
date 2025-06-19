@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Envoyer un colis - Askely Express</title>
+</head>
+<body>
+    <h2>Formulaire d'envoi de colis</h2>
+    <form action="/submit_colis" method="post">
+        <label>Nom complet:</label><br>
+        <input type="text" name="nom" required><br>
+        <label>Numéro WhatsApp:</label><br>
+        <input type="text" name="telephone" required><br>
+        <label>Ville de départ:</label><br>
+        <input type="text" name="ville_depart" required><br>
+        <label>Ville d'arrivée:</label><br>
+        <input type="text" name="ville_arrivee" required><br>
+        <label>Date souhaitée:</label><br>
+        <input type="date" name="date" required><br>
+        <label>Description du colis:</label><br>
+        <textarea name="description" rows="4" cols="40" required></textarea><br>
+        <input type="submit" value="Envoyer">
+    </form>
+</body>
+</html>
