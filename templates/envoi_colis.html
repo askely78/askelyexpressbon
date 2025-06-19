@@ -1,1 +1,20 @@
-<h1>Envoyer Colis Form</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Envoi de Colis</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <form action="/submit_colis" method="post">
+        <h2>📦 Formulaire d’envoi de colis</h2>
+        <input type="text" name="nom" placeholder="Nom complet" required>
+        <input type="tel" name="telephone" placeholder="Téléphone" required>
+        <input type="text" name="ville_depart" placeholder="Ville de départ" required>
+        <input type="text" name="ville_arrivee" placeholder="Ville d’arrivée" required>
+        <input type="date" name="date_envoi" required>
+        <textarea name="description" placeholder="Contenu du colis" required></textarea>
+        <button type="submit">Envoyer</button>
+    </form>
+</body>
+</html>

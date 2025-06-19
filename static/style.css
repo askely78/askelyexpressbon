@@ -1,1 +1,35 @@
-body{font-family:sans-serif;}
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 600px;
+    margin: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+input, select, textarea, button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+button {
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #005fa3;
+}
+@media (max-width: 600px) {
+    form {
+        padding: 10px;
+    }
+}

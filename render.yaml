@@ -1,10 +1,6 @@
 services:
   - type: web
-    name: askelyexpressbon
+    name: askely-express
     env: python
-    plan: free
-    buildCommand: ""
-    startCommand: gunicorn app:app
-    envVars:
-      - key: DATABASE_URL
-        sync: false
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"

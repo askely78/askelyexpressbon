@@ -7,54 +7,54 @@ app = Flask(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 @app.route("/")
-def index():
-    return "👋 Bienvenue chez Askely Express ! Utilisez WhatsApp pour interagir."
+def home():
+    return "✅ Askely Express est en ligne."
 
-# Formulaire envoi colis (HTML)
-@app.route("/formulaire_colis")
-def formulaire_colis():
+@app.route("/envoi-colis")
+def envoi_colis():
     return render_template("envoi_colis.html")
+
+@app.route("/inscription-transporteur")
+def inscription_transporteur():
+    return render_template("inscription_transporteur.html")
 
 @app.route("/submit_colis", methods=["POST"])
 def submit_colis():
-    nom = request.form["nom"]
-    telephone = request.form["telephone"]
-    ville_depart = request.form["ville_depart"]
-    ville_arrivee = request.form["ville_arrivee"]
-    date = request.form["date"]
-    poids = request.form["poids"]
-
-    conn = psycopg2.connect(DATABASE_URL)
-    cur = conn.cursor()
-    cur.execute("INSERT INTO colis (nom, telephone, ville_depart, ville_arrivee, date, poids) VALUES (%s, %s, %s, %s, %s, %s)", 
-                (nom, telephone, ville_depart, ville_arrivee, date, poids))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    return "✅ Colis enregistré avec succès !"
-
-# Formulaire inscription transporteur (HTML)
-@app.route("/formulaire_transporteur")
-def formulaire_transporteur():
-    return render_template("inscription_transporteur.html")
+    try:
+        data = (
+            request.form["nom"],
+            request.form["telephone"],
+            request.form["ville_depart"],
+            request.form["ville_arrivee"],
+            request.form["date_envoi"],
+            request.form["description"]
+        )
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("INSERT INTO colis (nom, telephone, ville_depart, ville_arrivee, date_envoi, description) VALUES (%s, %s, %s, %s, %s, %s)", data)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return "✅ Colis enregistré avec succès."
+    except Exception as e:
+        return f"Erreur : {e}"
 
 @app.route("/submit_transporteur", methods=["POST"])
 def submit_transporteur():
-    nom = request.form["nom"]
-    telephone = request.form["telephone"]
-    ville = request.form["ville"]
-    jours_dispo = request.form["jours_dispo"]
-
-    conn = psycopg2.connect(DATABASE_URL)
-    cur = conn.cursor()
-    cur.execute("INSERT INTO transporteurs (nom, telephone, ville, jours_dispo) VALUES (%s, %s, %s, %s)", 
-                (nom, telephone, ville, jours_dispo))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    return "✅ Transporteur enregistré avec succès !"
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    try:
+        data = (
+            request.form["nom"],
+            request.form["telephone"],
+            request.form["ville_depart"],
+            request.form["ville_arrivee"],
+            request.form["jours_disponibles"]
+        )
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("INSERT INTO transporteurs (nom, telephone, ville_depart, ville_arrivee, jours_disponibles) VALUES (%s, %s, %s, %s, %s)", data)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return "✅ Transporteur inscrit avec succès."
+    except Exception as e:
+        return f"Erreur : {e}"
