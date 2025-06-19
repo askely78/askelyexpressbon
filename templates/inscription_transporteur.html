@@ -1,19 +1,19 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Inscription Transporteur</title>
+    <title>Devenir transporteur</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <form action="/submit_transporteur" method="post">
-        <h2>🚚 Inscription Transporteur</h2>
-        <input type="text" name="nom" placeholder="Nom complet" required>
-        <input type="tel" name="telephone" placeholder="Téléphone" required>
-        <input type="text" name="ville_depart" placeholder="Ville de départ" required>
-        <input type="text" name="ville_arrivee" placeholder="Ville d’arrivée" required>
-        <input type="text" name="jours_disponibles" placeholder="Exemple : Lundi, Mercredi, Vendredi" required>
-        <button type="submit">S’inscrire</button>
+    <h2>Formulaire transporteur</h2>
+    <form method="POST">
+        <input name="nom" placeholder="Nom complet" required>
+        <input name="telephone" placeholder="Téléphone WhatsApp" required>
+        <input name="ville" placeholder="Ville principale" required>
+        <input name="destinations" placeholder="Destinations desservies" required>
+        <input name="jours" placeholder="Jours de transport (ex: lundi, jeudi)" required>
+        <button type="submit">Envoyer</button>
     </form>
 </body>
 </html>
