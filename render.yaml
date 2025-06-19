@@ -1,6 +1,5 @@
 services:
   - type: web
-    name: askely-express
+    name: askelyexpress
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    buildCommand: pip install -r requirements.txt
