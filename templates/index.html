@@ -1,19 +1,21 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Accueil Askely Express</title>
-    <style>
-        body { font-family: Arial; background-color: #f9f9f9; padding: 20px; }
-        .card { background: #fff; padding: 20px; margin: 20px auto; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .card a { display: block; padding: 10px; margin: 10px 0; background: #007bff; color: white; text-align: center; text-decoration: none; border-radius: 5px; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil - Askely Express</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="card">
-        <h2>Bienvenue sur Askely Express 🚀</h2>
-        <p>Choisissez une action :</p>
-        <a href="/transporteurs">Voir les transporteurs</a>
-        <a href="/colis">Voir les colis</a>
+    <div class="container">
+        <h1>Bienvenue sur Askely Express</h1>
+        <p>Votre concierge intelligent pour l'envoi de colis entre voyageurs.</p>
+        <div class="btn-container">
+            <a href="/envoi_colis" class="btn">📦 Envoyer un Colis</a>
+            <a href="/inscription_transporteur" class="btn">🚗 Devenir Transporteur</a>
+            <a href="/publier_depart" class="btn">📅 Publier un Départ</a>
+        </div>
     </div>
 </body>
 </html>

@@ -1,17 +1,22 @@
+
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Envoi de Colis</title>
+    <title>Envoyer un colis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+<div class="container">
     <h2>Formulaire d'envoi de colis</h2>
-    <form action="{{ url_for('envoi_colis') }}" method="POST">
-        <label for="nom">Nom :</label>
-        <input type="text" name="nom" required><br><br>
-        <label for="date">Date d'envoi :</label>
-        <input type="date" name="date" required><br><br>
+    <form method="POST">
+        <input type="text" name="nom" placeholder="Votre nom" required>
+        <input type="text" name="ville_depart" placeholder="Ville de départ" required>
+        <input type="text" name="ville_arrivee" placeholder="Ville d'arrivée" required>
+        <input type="text" name="poids" placeholder="Poids estimé (kg)" required>
+        <input type="date" name="date_envoi" required>
+        <input type="text" name="whatsapp" placeholder="Numéro WhatsApp" required>
         <button type="submit">Envoyer</button>
     </form>
+</div>
 </body>
 </html>

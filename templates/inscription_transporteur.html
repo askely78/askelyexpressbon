@@ -1,19 +1,20 @@
+
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Inscription Transporteur</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Formulaire d'inscription transporteur</h2>
-    <form action="{{ url_for('inscription_transporteur') }}" method="POST">
-        <label for="nom">Nom :</label>
-        <input type="text" name="nom" required><br><br>
-        <label for="whatsapp">Numéro WhatsApp :</label>
-        <input type="text" name="whatsapp" required><br><br>
-        <label for="date">Date disponible :</label>
-        <input type="date" name="date" required><br><br>
+<div class="container">
+    <h2>Inscription Transporteur</h2>
+    <form method="POST">
+        <input type="text" name="nom" placeholder="Votre nom" required>
+        <input type="text" name="ville" placeholder="Ville de départ" required>
+        <input type="text" name="whatsapp" placeholder="Numéro WhatsApp" required>
+        <input type="date" name="date_dispo" required>
         <button type="submit">S'inscrire</button>
     </form>
+</div>
 </body>
 </html>
