@@ -1,1 +1,17 @@
-<form method='POST'><input name='date'><button>Envoyer</button></form>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Envoi de Colis</title>
+</head>
+<body>
+    <h2>Formulaire d'envoi de colis</h2>
+    <form action="{{ url_for('envoi_colis') }}" method="POST">
+        <label for="nom">Nom :</label>
+        <input type="text" name="nom" required><br><br>
+        <label for="date">Date d'envoi :</label>
+        <input type="date" name="date" required><br><br>
+        <button type="submit">Envoyer</button>
+    </form>
+</body>
+</html>

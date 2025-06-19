@@ -1,1 +1,19 @@
-<form method='POST'><input name='whatsapp'><input name='date_dispo'><button>Envoyer</button></form>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription Transporteur</title>
+</head>
+<body>
+    <h2>Formulaire d'inscription transporteur</h2>
+    <form action="{{ url_for('inscription_transporteur') }}" method="POST">
+        <label for="nom">Nom :</label>
+        <input type="text" name="nom" required><br><br>
+        <label for="whatsapp">Numéro WhatsApp :</label>
+        <input type="text" name="whatsapp" required><br><br>
+        <label for="date">Date disponible :</label>
+        <input type="date" name="date" required><br><br>
+        <button type="submit">S'inscrire</button>
+    </form>
+</body>
+</html>
